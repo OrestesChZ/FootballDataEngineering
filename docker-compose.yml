@@ -5,7 +5,6 @@ services:
     image: apache/airflow:2.6.0-python3.9
     command: webserver
     entrypoint: [ "/opt/airflow/script/entrypoint.sh" ]
-    #    restart: always
     depends_on:
       - postgres
     environment:
@@ -14,6 +13,7 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW__WEBSERVER_BASE_URL=http://localhost:8080
       - AIRFLOW__WEBSERVER__SECRET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+      - PYTHONPATH=/opt/airflow
     logging:
       options:
         max-size: 10m
@@ -24,8 +24,6 @@ services:
       - ./requirements.txt:/opt/airflow/requirements.txt
       - ./data:/opt/airflow/data
       - ./pipelines:/opt/airflow/pipelines
-    #      - ./airflow.cfg:/opt/airflow/airflow.cfg
-    #      - ./airflow.db:/opt/airflow/airflow.db
     ports:
       - "8080:8080"
     healthcheck:
@@ -51,7 +49,6 @@ services:
 
   scheduler:
     image: apache/airflow:2.6.0-python3.9
-    #    restart: always
     depends_on:
       webserver:
         condition: service_healthy
@@ -66,8 +63,10 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW__WEBSERVER_BASE_URL=http://localhost:8080
       - AIRFLOW__WEBSERVER__SECRET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+      - PYTHONPATH=/opt/airflow
     command: bash -c "pip install --no-cache-dir -r ./requirements.txt && airflow db upgrade && airflow scheduler"
     networks:
       - confluent
+
 networks:
   confluent:
